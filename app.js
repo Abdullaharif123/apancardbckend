@@ -15,29 +15,15 @@ console.log("Loaded MONGODB_URI from env:", process.env.MONGO_URI);
 const app = express();
 
 // Define allowed origins
-const allowedOrigins = [
-  "https://apnacard.vercel.app",   // ✅ Your Vercel frontend
-  "http://localhost:3000",         // ✅ Local development
-];
-
-// CORS Middleware - Properly configured
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g., mobile apps, curl, Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.error("Blocked by CORS: ", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // 👉 Set to true only if you're sending cookies
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Length"], // Optional: if needed
-  })
-);
+const corsOptions = {
+  origin: [
+    "https://apnacard.vercel.app"  // ✅ Add your current frontend
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // ✅ Added OPTIONS
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  exposedHeaders: ["Content-Length"],
+};
 
 // Built-in middleware
 app.use(express.json({ limit: "10mb" })); // Handle large payloads if needed
