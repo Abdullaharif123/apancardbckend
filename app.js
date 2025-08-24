@@ -6,7 +6,7 @@ import adminRoutes from "./routes/admin/adminRoutes.js";
 import userRoutes from "./routes/user/userRoutes.js";
 import commonRoutes from "./routes/commonRoutes.js";
 import cors from "cors";
-
+//test
 // Load environment variables
 dotenv.config();
 
