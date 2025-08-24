@@ -18,7 +18,7 @@ const app = express();
 // ----------------------
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://apna-card.vercel.app"], // whitelist frontends
+    origin: ["http://localhost:3000", "https://apna-card.vercel.app/"], // whitelist frontends
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
