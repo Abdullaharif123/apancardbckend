@@ -7,43 +7,88 @@ import userRoutes from "./routes/user/userRoutes.js";
 import commonRoutes from "./routes/commonRoutes.js";
 import cors from "cors";
 
+// Load environment variables
 dotenv.config();
+
 console.log("Loaded MONGODB_URI from env:", process.env.MONGO_URI);
 
 const app = express();
 
-// Middleware
-app.use(express.json());
+// Define allowed origins
+const allowedOrigins = [
+  "https://apnacard.vercel.app",   // ✅ Your Vercel frontend
+  "http://localhost:3000",         // ✅ Local development
+];
 
-// ✅ Allow all origins
+// CORS Middleware - Properly configured
 app.use(
   cors({
-    origin: "*", // <-- allow all
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g., mobile apps, curl, Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error("Blocked by CORS: ", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // 👉 Set to true only if you're sending cookies
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Length"], // Optional: if needed
   })
 );
 
-// ✅ Handle preflight OPTIONS globally
-app.options("*", cors());
+// Built-in middleware
+app.use(express.json({ limit: "10mb" })); // Handle large payloads if needed
+app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// 👇 Routes
 app.use("/api/super-admin", superAdminRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/users", userRoutes); // 👀 matches login URL
+app.use("/api/users", userRoutes);
 app.use("/api", commonRoutes);
+
+// 👉 Optional: Health check route
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
+});
+
 // MongoDB Connection
-const environment = process.env.ENVIRONMENT || "dev";
 const mongoURI = process.env.MONGO_URI;
 
-mongoose
-  .connect(mongoURI, { useNewUrlParser: true })
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log(err));
+if (!mongoURI) {
+  console.error("❌ MONGO_URI is not defined in environment variables!");
+  process.exit(1);
+}
 
+mongoose
+  .connect(mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    // Remove deprecated options if not needed
+  })
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => {
+    console.error("❌ MongoDB Connection Error:", err.message);
+  });
+
+// Handle unhandled promise rejections
+mongoose.connection.on("error", (err) => {
+  console.error("❌ Mongoose connection error:", err);
+});
+
+// PORT
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(
-    `🚀 Server running on port ${PORT}, environment: ${process.env.ENVIRONMENT}`
-  )
-);
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.ENVIRONMENT || "development"}`);
+  console.log(`🔗 Frontend allowed: ${allowedOrigins.join(", ")}`);
+});
+
+// Optional: Handle uncaught exceptions
+process.on("unhandledRejection", (err) => {
+  console.error("❌ Unhandled Rejection:", err);
+  // server.close(() => process.exit(1));
+});
