@@ -15,8 +15,8 @@ console.log("Loaded MONGODB_URI from env:", process.env.MONGO_URI);
 const app = express();
 
 // Define allowed origins
-const allowedOrigins = ["https://apnacard.vercel.com", "http://localhost:3000"];
-
+// const allowedOrigins = ["https://apnacard.vercel.com", "http://localhost:3000"];
+const allowedOrigins = ["*"];
 app.use(
   cors({
     origin: function (origin, callback) {
