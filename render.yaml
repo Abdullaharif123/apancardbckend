@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: apna-card
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "node app.js"
+    autoDeploy: true
+    routes:
+      - type: http
+        path: /*
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]   # ✅ allow OPTIONS
