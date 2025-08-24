@@ -18,7 +18,7 @@ app.use(express.json());
 // ✅ Allow all origins
 app.use(
   cors({
-    origin: ["https://apna-card.vercel.app"], // <-- allow all
+    origin: [ "https://apna-card.vercel.app"]
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
