@@ -18,15 +18,15 @@ const app = express();
 // ----------------------
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://apna-card.vercel.app/"], // whitelist frontends
+    origin: ["http://localhost:3000", "https://apna-card.vercel.app"], // ✅ no trailing slash
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
-// ✅ Explicit preflight handler
-app.use((req, res, next) => {
+// ✅ Global preflight handler (works on Render)
+app.all("*", (req, res, next) => {
   if (req.method === "OPTIONS") {
     res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
@@ -63,5 +63,7 @@ mongoose
 // ----------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}, environment: ${process.env.ENVIRONMENT}`)
+  console.log(
+    `🚀 Server running on port ${PORT}, environment: ${process.env.ENVIRONMENT}`
+  )
 );
