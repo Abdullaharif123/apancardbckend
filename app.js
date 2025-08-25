@@ -6,17 +6,18 @@ import adminRoutes from "./routes/admin/adminRoutes.js";
 import userRoutes from "./routes/user/userRoutes.js";
 import commonRoutes from "./routes/commonRoutes.js";
 import cors from "cors";
-//test
-// Load environment variables
-dotenv.config();
 
-console.log("Loaded MONGODB_URI from env:", process.env.MONGO_URI);
+dotenv.config();
 
 const app = express();
 
-// Define allowed origins
-// const allowedOrigins = ["https://apnacard.vercel.com", "http://localhost:3000"];
-const allowedOrigins = ["*"];
+// ✅ Allowed origins (explicit, no "*")
+const allowedOrigins = [
+  "https://apnacard.vercel.app",
+  "http://localhost:3000",
+];
+
+// ✅ CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -26,15 +27,30 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // Allow cookies/authorization headers if needed
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// Handle preflight requests
-app.options("*", cors());
+// ✅ Manual fallback (Render sometimes strips headers)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Built-in middleware
-app.use(express.json({ limit: "10mb" })); // Handle large payloads if needed
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // 👇 Routes
@@ -43,7 +59,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", commonRoutes);
 
-// 👉 Optional: Health check route
+// Health check
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
@@ -60,14 +76,12 @@ mongoose
   .connect(mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    // Remove deprecated options if not needed
   })
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
     console.error("❌ MongoDB Connection Error:", err.message);
   });
 
-// Handle unhandled promise rejections
 mongoose.connection.on("error", (err) => {
   console.error("❌ Mongoose connection error:", err);
 });
@@ -80,8 +94,7 @@ app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.ENVIRONMENT || "development"}`);
 });
 
-// Optional: Handle uncaught exceptions
+// Handle uncaught exceptions
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err);
-  // server.close(() => process.exit(1));
 });
